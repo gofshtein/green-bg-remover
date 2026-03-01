@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Green Background Remover</title>
-    <meta name="description" content="Remove #00b140 green background from images instantly">
+    <title>Transparent Image Generator</title>
+    <meta name="description" content="Generate images with transparent backgrounds using AI, or remove green backgrounds from uploads">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,30 +17,86 @@
         <header class="header">
             <div class="logo">
                 <div class="logo-icon"></div>
-                <h1>Green BG Remover</h1>
+                <h1>Transparent Image Gen</h1>
             </div>
-            <p class="subtitle">Remove <span class="color-badge">#00b140</span> background instantly</p>
+            <p class="subtitle">Generate or upload images with transparent backgrounds</p>
         </header>
+
+        <div class="api-key-section">
+            <button class="api-key-toggle" id="apiKeyToggle">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                </svg>
+                API Key
+                <span class="api-key-status" id="apiKeyStatus"></span>
+            </button>
+            <div class="api-key-panel" id="apiKeyPanel" style="display: none;">
+                <label for="apiKeyInput">Gemini API Key</label>
+                <div class="api-key-input-row">
+                    <input type="password" id="apiKeyInput" placeholder="Enter your Gemini API key">
+                    <button class="btn btn-secondary btn-sm" id="apiKeySaveBtn">Save</button>
+                </div>
+            </div>
+        </div>
 
         <main class="main-content">
             <div class="upload-section" id="uploadSection">
-                <div class="upload-zone" id="uploadZone">
-                    <div class="upload-icon">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.5">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="17,8 12,3 7,8" />
-                            <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
+                <div class="tab-bar">
+                    <button class="tab active" data-tab="generate" id="tabGenerate">Generate</button>
+                    <button class="tab" data-tab="upload" id="tabUpload">Upload</button>
+                </div>
+
+                <div class="tab-content" id="generateTab">
+                    <div class="generate-zone">
+                        <textarea id="promptInput" placeholder="Describe the image you want to generate..." rows="3"></textarea>
+                        <div class="ref-image-section">
+                            <div class="ref-image-preview" id="refImagePreview" style="display: none;">
+                                <img id="refImageThumb" alt="Reference">
+                                <button class="ref-image-remove" id="refImageRemove" title="Remove">&times;</button>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" id="refImageBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                                Add reference image
+                            </button>
+                            <input type="file" id="refImageInput" accept="image/*" hidden>
+                        </div>
+                        <button class="btn btn-primary" id="generateBtn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                            </svg>
+                            Generate Image
+                        </button>
+                        <div class="generate-loading" id="generateLoading" style="display: none;">
+                            <div class="spinner"></div>
+                            <span>Generating image...</span>
+                        </div>
+                        <div class="generate-error" id="generateError" style="display: none;"></div>
                     </div>
-                    <h2>Drop your image here</h2>
-                    <p>or click to browse</p>
-                    <input type="file" id="fileInput" accept="image/*" hidden>
+                </div>
+
+                <div class="tab-content" id="uploadTab" style="display: none;">
+                    <div class="upload-zone" id="uploadZone">
+                        <div class="upload-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17,8 12,3 7,8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                        </div>
+                        <h2>Drop your image here</h2>
+                        <p>or click to browse</p>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                    </div>
                 </div>
             </div>
 
             <div class="editor-section" id="editorSection" style="display: none;">
-                <div class="controls-bar">
+                <div class="controls-bar" id="controlsBar">
                     <div class="color-control">
                         <label for="targetColor">Target Color:</label>
                         <input type="color" id="targetColor" value="#00b140">
@@ -79,22 +135,34 @@
                     </div>
                 </div>
 
-                <div class="preview-container">
-                    <div class="preview-panel">
+                <div class="generate-result-bar" id="generateResultBar" style="display: none;">
+                    <button class="btn btn-primary" id="downloadBtnGen">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7,10 12,15 17,10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Download PNG
+                    </button>
+                </div>
+
+                <div class="preview-container" id="previewContainer">
+                    <div class="preview-panel" id="originalPanel">
                         <h3>Original</h3>
                         <div class="canvas-wrapper">
                             <canvas id="originalCanvas"></canvas>
                         </div>
                     </div>
-                    <div class="arrow-divider">
+                    <div class="arrow-divider" id="arrowDivider">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M5 12h14" />
                             <path d="M12 5l7 7-7 7" />
                         </svg>
                     </div>
-                    <div class="preview-panel">
-                        <h3>Result</h3>
+                    <div class="preview-panel" id="resultPanel">
+                        <h3 id="resultLabel">Result</h3>
                         <div class="canvas-wrapper checkered">
                             <canvas id="resultCanvas"></canvas>
                         </div>
@@ -106,14 +174,11 @@
                         <line x1="12" y1="5" x2="12" y2="19" />
                         <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
-                    Upload New Image
+                    New Image
                 </button>
             </div>
         </main>
 
-        <footer class="footer">
-            <p>Target color: <span class="color-swatch"></span> #00b140 (Green)</p>
-        </footer>
     </div>
 
     <script src="app.js"></script>
